@@ -1,20 +1,76 @@
 package com.example.kelompokgminiproject
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.kelompokgminiproject.api.MovieApiService
+import com.example.kelompokgminiproject.model.MovieResponse
+import com.example.kelompokgminiproject.MovieAdapter
+import retrofit2.*
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var searchInput: EditText
+    private lateinit var btnSearch: Button
+    private lateinit var welcomeText: TextView
+    private lateinit var movieList: RecyclerView
+    private lateinit var movieAdapter: MovieAdapter
+
+    private val retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://www.omdbapi.com/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+    }
+
+    private val movieApiService by lazy {
+        retrofit.create(MovieApiService::class.java)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        searchInput = findViewById(R.id.search_input)
+        btnSearch = findViewById(R.id.btn_search)
+        welcomeText = findViewById(R.id.welcome_text)
+        movieList = findViewById(R.id.movie_list)
+
+        movieList.layoutManager = LinearLayoutManager(this)
+
+        btnSearch.setOnClickListener {
+            val query = searchInput.text.toString()
+            if (query.isNotBlank()) {
+                fetchMovies(query)
+            }
         }
+    }
+
+    private val apiKey = "b661cc7a"
+    private fun fetchMovies(query: String) {
+        val call = movieApiService.searchMovies(apiKey, query)
+        call.enqueue(object : Callback<MovieResponse> {
+            override fun onResponse(
+                call: Call<MovieResponse>,
+                response: Response<MovieResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val movies = response.body()?.movies ?: emptyList()
+                    welcomeText.visibility = View.GONE
+                    movieList.visibility = View.VISIBLE
+                    movieAdapter = MovieAdapter(movies)
+                    movieList.adapter = movieAdapter
+                } else {
+                    Toast.makeText(this@MainActivity, "Response error", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<MovieResponse>, t: Throwable) {
+                Toast.makeText(this@MainActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }
