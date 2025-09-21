@@ -1,6 +1,8 @@
 package com.example.kelompokgminiproject
 
 import android.os.Bundle
+import android.widget.SearchView
+import androidx.activity.enableEdgeToEdge
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -47,6 +49,45 @@ class MainActivity : AppCompatActivity() {
                 fetchMovies(query)
             }
         }
+
+        val searchView = findViewById<SearchView>(R.id.searchView)
+
+        // Default -> tampilakn welcome fragmentynya
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, WelcomeFragment())
+            .commit()
+
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (!query.isNullOrEmpty()) {
+                    val fragment = SearchResultFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("query", query)
+                        }
+                    }
+
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, fragment)
+                        .commit()
+                } else {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, WelcomeFragment())
+                        .commit()
+                }
+
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText.isNullOrEmpty()) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, WelcomeFragment())
+                        .commit()
+                }
+
+                return true
+            }
+        })
     }
 
     private val apiKey = "b661cc7a"
