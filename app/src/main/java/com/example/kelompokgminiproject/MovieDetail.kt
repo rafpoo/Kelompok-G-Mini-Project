@@ -1,6 +1,7 @@
 package com.example.kelompokgminiproject
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -16,10 +17,12 @@ import com.squareup.moshi.Moshi
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 class MovieDetail : AppCompatActivity() {
-    // Model untuk Moshi
+    // Model untuk parsing detail movie
     class Movie {
         @Json(name = "Title")
         var title: String? = null
@@ -53,44 +56,51 @@ class MovieDetail : AppCompatActivity() {
         val movieDetail1 = findViewById<TextView>(R.id.movieDetail1)
         val movieDetail2 = findViewById<TextView>(R.id.movieDetail2)
 
-        backButton.setOnClickListener(View.OnClickListener { v: View? -> finish() })
+        backButton.setOnClickListener { finish() }
 
-        // ExecutorService untuk thread background
+        // Ambil judul movie dari Intent
+        val movieTitleExtra = intent.getStringExtra("movie_title") ?: "Avengers"
+        val encodedTitle = URLEncoder.encode(movieTitleExtra, StandardCharsets.UTF_8.toString())
+
+        // ExecutorService untuk background thread
         val executor = Executors.newSingleThreadExecutor()
 
-        executor.execute(Runnable {
+        executor.execute {
             try {
-                // HTTP request
+                // HTTP request pakai judul dari Intent
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://www.omdbapi.com/?apikey=YOUR_API_KEY&t=Avengers")
+                    .url("https://www.omdbapi.com/?apikey=b661cc7a&t=$encodedTitle")
                     .build()
                 val response = client.newCall(request).execute()
                 val json = response.body()!!.string()
 
+                // Log JSON biar bisa cek di Logcat
+                Log.d("MovieDetail", "Response JSON: $json")
+
                 // Parse JSON dengan Moshi
                 val moshi = Moshi.Builder().build()
-                val adapter = moshi.adapter<Movie?>(Movie::class.java)
+                val adapter = moshi.adapter(Movie::class.java)
                 val movie = adapter.fromJson(json)
 
                 // Update UI di main thread
-                runOnUiThread(Runnable {
+                runOnUiThread {
                     if (movie != null) {
-                        movieTitle.setText(if (movie.title != null) movie.title else "No title")
-                        movieDetail1.setText("Year: " + (if (movie.year != null) movie.year else "-"))
-                        movieDetail2.setText("Genre: " + (if (movie.genre != null) movie.genre else "-"))
+                        movieTitle.text = movie.title ?: "No title"
+                        movieDetail1.text = "Year: " + (movie.year ?: "-")
+                        movieDetail2.text = "Genre: " + (movie.genre ?: "-")
 
                         Glide.with(this@MovieDetail)
                             .load(movie.poster)
                             .placeholder(android.R.color.darker_gray)
                             .into(posterView)
                     } else {
-                        movieTitle.setText("Parsing error")
+                        movieTitle.text = "Parsing error"
                     }
-                })
+                }
             } catch (e: IOException) {
-                runOnUiThread(Runnable { movieTitle.setText("Error: " + e.message) })
+                runOnUiThread { movieTitle.text = "Error: ${e.message}" }
             }
-        })
+        }
     }
 }

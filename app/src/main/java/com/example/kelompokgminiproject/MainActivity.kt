@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var movieList: RecyclerView
     private lateinit var movieAdapter: MovieAdapter
     private lateinit var fabNext: FloatingActionButton
-    private lateinit var fabBack: FloatingActionButton   // 🔹 tambahkan ini
+    private lateinit var fabBack: FloatingActionButton
 
 
     private var allMovies: List<Movie> = emptyList()

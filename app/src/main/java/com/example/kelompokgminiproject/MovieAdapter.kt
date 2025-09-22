@@ -9,6 +9,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.kelompokgminiproject.model.Movie
+import android.content.Intent
+
 
 class MovieAdapter(private var movies: List<Movie>) :
     RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
@@ -37,8 +39,12 @@ class MovieAdapter(private var movies: List<Movie>) :
             .into(holder.poster)
 
         holder.btnInfo.setOnClickListener {
-            // TODO: bisa arahkan ke detail activity
+            val context = holder.itemView.context
+            val intent = Intent(context, MovieDetail::class.java)
+            intent.putExtra("movie_title", movie.title)
+            context.startActivity(intent)
         }
+
     }
 
     override fun getItemCount(): Int = movies.size
