@@ -2,22 +2,31 @@ package com.example.kelompokgminiproject
 
 import android.os.Bundle
 import android.view.View
-import android.widget.SearchView
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kelompokgminiproject.api.MovieApiService
+import com.example.kelompokgminiproject.model.Movie
 import com.example.kelompokgminiproject.model.MovieResponse
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import retrofit2.*
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var searchView: SearchView
+    private lateinit var searchEditText: EditText
     private lateinit var welcomeText: TextView
     private lateinit var movieList: RecyclerView
     private lateinit var movieAdapter: MovieAdapter
+    private lateinit var fabNext: FloatingActionButton
+    private lateinit var fabBack: FloatingActionButton   // 🔹 tambahkan ini
+
+
+    private var allMovies: List<Movie> = emptyList()
+    private var currentPage = 0
+    private val pageSize = 4
 
     private val retrofit by lazy {
         Retrofit.Builder()
@@ -36,30 +45,49 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        searchView = findViewById(R.id.searchView)
+        searchEditText = findViewById(R.id.searchEditText)
         welcomeText = findViewById(R.id.welcome_text)
         movieList = findViewById(R.id.movie_list)
+        fabNext = findViewById(R.id.fabNext)
+        fabBack = findViewById(R.id.fabBack)   // 🔹 inisialisasi tombol Back
 
         movieList.layoutManager = LinearLayoutManager(this)
+        movieAdapter = MovieAdapter(emptyList())
+        movieList.adapter = movieAdapter
 
-        // Listener untuk SearchView
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                if (!query.isNullOrEmpty()) {
-                    fetchMovies(query)
-                }
-                return true
+        // Search action: tekan enter untuk submit
+        searchEditText.setOnEditorActionListener { _, _, _ ->
+            val query = searchEditText.text.toString()
+            if (query.isNotEmpty()) {
+                fetchMovies(query)
             }
+            true
+        }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText.isNullOrEmpty()) {
-                    // Kembali tampilkan welcome text kalau kosong
-                    welcomeText.visibility = View.VISIBLE
-                    movieList.visibility = View.GONE
+        // Tombol Next untuk pagination
+        fabNext.setOnClickListener {
+            if (allMovies.isNotEmpty()) {
+                val maxPage = (allMovies.size + pageSize - 1) / pageSize
+                if (currentPage < maxPage - 1) {
+                    currentPage++
+                    showPage()
+                } else {
+                    Toast.makeText(this, "Sudah halaman terakhir", Toast.LENGTH_SHORT).show()
                 }
-                return true
             }
-        })
+        }
+
+        // 🔹 Tombol Back untuk pagination
+        fabBack.setOnClickListener {
+            if (allMovies.isNotEmpty()) {
+                if (currentPage > 0) {
+                    currentPage--
+                    showPage()
+                } else {
+                    Toast.makeText(this, "Sudah di halaman pertama", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun fetchMovies(query: String) {
@@ -70,12 +98,12 @@ class MainActivity : AppCompatActivity() {
                 response: Response<MovieResponse>
             ) {
                 if (response.isSuccessful) {
-                    val movies = response.body()?.movies ?: emptyList()
-                    if (movies.isNotEmpty()) {
+                    allMovies = response.body()?.movies ?: emptyList()
+                    currentPage = 0
+                    if (allMovies.isNotEmpty()) {
                         welcomeText.visibility = View.GONE
                         movieList.visibility = View.VISIBLE
-                        movieAdapter = MovieAdapter(movies)
-                        movieList.adapter = movieAdapter
+                        showPage()
                     } else {
                         welcomeText.text = "Film tidak ditemukan"
                         welcomeText.visibility = View.VISIBLE
@@ -90,5 +118,12 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun showPage() {
+        val fromIndex = currentPage * pageSize
+        val toIndex = minOf(fromIndex + pageSize, allMovies.size)
+        val pageMovies = allMovies.subList(fromIndex, toIndex)
+        movieAdapter.updateData(pageMovies)
     }
 }
