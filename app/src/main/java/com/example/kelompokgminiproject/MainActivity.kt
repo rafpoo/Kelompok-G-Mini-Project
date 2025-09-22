@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.kelompokgminiproject.adapter.MovieAdapter
 import com.example.kelompokgminiproject.api.MovieApiService
 import com.example.kelompokgminiproject.model.Movie
 import com.example.kelompokgminiproject.model.MovieResponse

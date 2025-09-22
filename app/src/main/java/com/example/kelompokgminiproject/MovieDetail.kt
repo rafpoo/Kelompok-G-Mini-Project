@@ -12,10 +12,12 @@ import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
+import com.example.kelompokgminiproject.api.ApiClient
 import com.example.kelompokgminiproject.model.Movie   // 🔹 pakai model Movie yang sudah ada
 import com.squareup.moshi.Moshi
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import retrofit2.Call
 import java.io.IOException
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -41,46 +43,45 @@ class MovieDetail : AppCompatActivity() {
         val movieTitle = findViewById<TextView>(R.id.movieTitle)
         val movieDetail1 = findViewById<TextView>(R.id.movieDetail1)
         val movieDetail2 = findViewById<TextView>(R.id.movieDetail2)
+        val movieDetail3 = findViewById<TextView>(R.id.movieDetail3)
+        val movieDesc = findViewById<TextView>(R.id.movieDescription)
 
         backButton.setOnClickListener { finish() }
 
         // Ambil judul movie dari Intent
-        val movieTitleExtra = intent.getStringExtra("movie_title") ?: "Avengers"
+        val movieTitleExtra = intent.getStringExtra("movie_title") ?: "Title not found"
         val encodedTitle = URLEncoder.encode(movieTitleExtra, StandardCharsets.UTF_8.toString())
 
-        val executor = Executors.newSingleThreadExecutor()
-        executor.execute {
-            try {
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url("https://www.omdbapi.com/?apikey=b661cc7a&t=$encodedTitle")
-                    .build()
-                val response = client.newCall(request).execute()
-                val json = response.body()?.string() ?: ""
+        ApiClient.api.getMovie(encodedTitle, "b661cc7a", "full")
+            .enqueue(object : retrofit2.Callback<Movie> {
+                override fun onResponse(call: Call<Movie>, response: retrofit2.Response<Movie>) {
+                    if (response.isSuccessful) {
+                        val movie = response.body()
+                        if (movie != null) {
+                            runOnUiThread {
+                                movieTitle.text = movie.Title ?: "No title"
+                                movieDetail1.text = "Year: ${movie.Year ?: "-"}"
+                                movieDetail2.text = "Genre: ${movie.Genre ?: "-"}"
+                                movieDetail3.text = "IMDB Rating: ${movie.imdbRating ?: "-"} / 10"
+                                movieDesc.text = movie.Plot ?: "Loading description ..."
 
-                Log.d("MovieDetail", "Response JSON: $json")
-
-                val moshi = Moshi.Builder().build()
-                val adapter = moshi.adapter(Movie::class.java) // 🔹 parse ke model Movie yang ada
-                val movie = adapter.fromJson(json)
-
-                runOnUiThread {
-                    if (movie != null) {
-                        movieTitle.text = movie.title ?: "No title"
-                        movieDetail1.text = "Year: ${movie.year ?: "-"}"
-                        movieDetail2.text = "Genre: ${movie.genre ?: "-"}"
-
-                        Glide.with(this@MovieDetail)
-                            .load(movie.poster)
-                            .placeholder(android.R.color.darker_gray)
-                            .into(posterView)
+                                Glide.with(this@MovieDetail)
+                                    .load(movie.Poster)
+                                    .placeholder(android.R.color.darker_gray)
+                                    .into(posterView)
+                            }
+                        } else {
+                            movieTitle.text = "Movie not found"
+                        }
                     } else {
-                        movieTitle.text = "Parsing error"
+                        movieTitle.text = "Error: ${response.message()}"
                     }
                 }
-            } catch (e: IOException) {
-                runOnUiThread { movieTitle.text = "Error: ${e.message}" }
-            }
-        }
+
+                override fun onFailure(call: Call<Movie>, t: Throwable) {
+                    runOnUiThread { movieTitle.text = "Request failed: ${t.message}" }
+                }
+            })
+
     }
 }

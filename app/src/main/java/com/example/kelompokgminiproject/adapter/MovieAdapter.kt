@@ -1,5 +1,6 @@
-package com.example.kelompokgminiproject
+package com.example.kelompokgminiproject.adapter
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,9 +9,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.kelompokgminiproject.MovieDetail
+import com.example.kelompokgminiproject.R
 import com.example.kelompokgminiproject.model.Movie
-import android.content.Intent
-
 
 class MovieAdapter(private var movies: List<Movie>) :
     RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
@@ -31,17 +32,17 @@ class MovieAdapter(private var movies: List<Movie>) :
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
         val movie = movies[position]
 
-        holder.title.text = movie.title
-        holder.subtitle.text = movie.year // atau genre kalau ada
+        holder.title.text = movie.Title
+        holder.subtitle.text = movie.Year // atau genre kalau ada
 
         Glide.with(holder.itemView.context)
-            .load(movie.poster)
+            .load(movie.Poster)
             .into(holder.poster)
 
         holder.btnInfo.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, MovieDetail::class.java)
-            intent.putExtra("movie_title", movie.title)
+            intent.putExtra("movie_title", movie.Title)
             context.startActivity(intent)
         }
 
