@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Kelompok G Mini Project</string>
+    <string name="content_desc_poster">Movie poster</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="content_desc_poster">Poster film</string>
 </resources>
