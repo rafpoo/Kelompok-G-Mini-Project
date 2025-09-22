@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MovieDetail">
+
+    <!-- Tombol back -->
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Back" />
+
+    <!-- Poster -->
+    <ImageView
+        android:id="@+id/moviePoster"
+        android:layout_width="200dp"
+        android:layout_height="300dp"
+        android:layout_gravity="center"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/content_desc_poster" />
+
+    <!-- Judul -->
+    <TextView
+        android:id="@+id/movieTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Movie Title"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="12dp" />
+
+    <!-- Detail -->
+    <TextView
+        android:id="@+id/movieDetail1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Year: -"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/movieDetail2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Genre: -"
+        android:textSize="16sp"
+        android:layout_marginTop="4dp"
+        android:gravity="center" />
+
+</LinearLayout>
